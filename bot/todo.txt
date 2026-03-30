@@ -7,3 +7,6 @@ https://github.com/love-apples/maxapi
 документация
 
 https://love-apples.github.io/maxapi/
+
+
+docker exec -it mysql_db_doctor_max mysql -u root -p -e "USE bot_doctor_max; INSERT INTO AdminBot (id_max, username, role) VALUES (222971440, 'admin', 0);"
