@@ -1,0 +1,58 @@
+services:
+
+  db_doctor_max:
+    image: mariadb:10.6
+    container_name: mysql_db_doctor_max
+    networks:
+      bot_doctor_max-network:
+        ipv4_address: 22.0.1.9
+    env_file:
+      - .env
+    ports:
+      - "3712:3306"
+    volumes:
+      - ./data:/var/lib/mysql
+      - ./db/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
+      # - ./db/my.cnf:/etc/mysql/my.cnf
+    restart: unless-stopped 
+    environment:
+      - TZ=Europe/Samara   
+
+  adminer_max:
+    image: adminer
+    container_name: adminer_doctor_max
+    networks:
+      bot_doctor_max-network:
+        ipv4_address: 22.0.1.11
+    ports:
+      - "8025:8080"
+    depends_on:
+      - db_doctor_max    
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/Samara
+
+  bot_doctor_max:
+    build: ./bot
+    container_name: bot_doctor_max_container
+    env_file:
+      - .env
+    depends_on:
+      - db_doctor_max
+    networks:
+      bot_doctor_max-network:
+        ipv4_address: 22.0.1.12
+    restart: unless-stopped  
+    volumes:
+      - ./bot:/bot
+    environment:
+      - TZ=Europe/Samara
+
+ 
+
+networks:
+  bot_doctor_max-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 22.0.1.0/24    
