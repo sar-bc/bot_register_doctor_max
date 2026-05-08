@@ -113,7 +113,6 @@ class DataBase:
                 logger.error(f"Failed to log to DB: {e}")
 
     # #==========*********===============
-    # database/Database.py
 
     async def get_settings(self):
         """Получает текущие настройки бота"""
@@ -266,6 +265,24 @@ class DataBase:
                 await session.rollback()
                 logger.error(f"Error updating state: {e}")
                 raise
+    
+    async def delete_message(self, mess_id):
+        from dotenv import load_dotenv
+        import os
+        load_dotenv()
+        TOKEN = os.getenv('MAX_BOT_TOKEN')
+        headers = {"Authorization": TOKEN}
+        try:
+            url = f"https://platform-api.max.ru/messages?message_id={mess_id}"
+            async with aiohttp.ClientSession() as session:
+                async with session.delete(url, headers=headers) as response:
+                    if response.status == 200:
+                        logger.info(f"Сообщение {mess_id} удалено")
+                    else:
+                        logger.error(f"Ошибка удаления {mess_id}: {response.status}")
+        except Exception as e:
+            logger.error(f"Ошибка при удалении сообщения {mess_id}: {e}")
+
 
     async def delete_messages(self, state):
         if state.last_message_ids:

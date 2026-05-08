@@ -395,8 +395,8 @@ async def handle_doctor_form_steps(event: MessageCreated, context: MemoryContext
     edit_target = data.get('edit_target')
     
     # Удаляем сообщение пользователя
-    await event.message.delete()
-    
+    # await event.message.delete()
+    await db.delete_message(event.message.body.mid)
     # ===== ОБРАБОТКА ПО СОСТОЯНИЯМ =====
     
     # Шаг 1: ФИО
@@ -1138,8 +1138,9 @@ async def patient_cancel_request(event: MessageCallback, db: DataBase):
         await db.update_call_status(request_id, 'pending_cancellation')
         
         # Удаляем сообщение с деталями
-        await event.message.delete()
-        
+        # await event.message.delete()
+        await db.delete_message(event.message.body.mid)
+
         # Отправляем уведомление сотрудникам call-центра (role=1)
         staff_list = await db.get_registration_staff()
         for staff in staff_list:
@@ -1185,8 +1186,8 @@ async def confirm_cancel_request(event: MessageCallback, db: DataBase):
         await db.update_call_status(request_id, 'cancelled')
         
         # Удаляем сообщение регистратора с кнопками
-        await event.message.delete()
-        
+        # await event.message.delete()
+        await db.delete_message(event.message.body.mid)
         # Отправляем уведомление регистратору
         await event.message.answer(f"⚠️ Вызов #{call.call_number} успешно отменен")
         
@@ -1233,8 +1234,8 @@ async def reject_cancel_request(event: MessageCallback, db: DataBase):
         await db.update_call_status(request_id, 'new')
         
         # Удаляем сообщение регистратора с кнопками
-        await event.message.delete()
-        
+        # await event.message.delete()
+        await db.delete_message(event.message.body.mid)
         # Отправляем уведомление регистратору
         await event.message.answer(f"❌ Отмена вызова #{call.call_number} отклонена")
         

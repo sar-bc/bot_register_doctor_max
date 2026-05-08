@@ -477,8 +477,8 @@ async def process_weekday_start_time(
     await db.update_state(user_state)
 
     # Удаляем сообщение пользователя с временем
-    await event.message.delete()
-
+    # await event.message.delete()
+    await db.delete_message(event.message.body.mid)
 
 #####################################################################
 @router.message_created(TimeSetupStates.WAITING_WEEKDAY_END)
@@ -532,8 +532,8 @@ async def process_weekday_end_time(
         await context.set_state(None)
 
         # Удаляем сообщение пользователя
-        await event.message.delete()
-
+        # await event.message.delete()
+        await db.delete_message(event.message.body.mid)
         # Показываем обновленные настройки
         keyboard = [await kb.schedule_settings_kb(db)]
         msg = await event.message.answer(
@@ -597,7 +597,8 @@ async def process_weekend_start_time(event: MessageCreated, db: DataBase, contex
     )
     user_state.last_message_ids.append(msg.message.body.mid)
     await db.update_state(user_state)
-    await event.message.delete()
+    # await event.message.delete()
+    await db.delete_message(event.message.body.mid)
 ############################################################
 # Обработка времени окончания работы в выходные
 @router.message_created(TimeSetupStates.WAITING_WEEKEND_END)
@@ -637,8 +638,8 @@ async def process_weekend_end_time(event: MessageCreated, db: DataBase, context:
         )
         
         await context.set_state(None)
-        await event.message.delete()
-        
+        # await event.message.delete()
+        await db.delete_message(event.message.body.mid)
         keyboard = [await kb.schedule_settings_kb(db)]
         msg = await event.message.answer(
             f"✅ Часы работы в выходные обновлены: {start_time_str}-{end_time_str}",
@@ -1131,8 +1132,8 @@ async def accept_choice_doc(event: MessageCallback, db: DataBase, context: Memor
             await logger.info(f'accept_choice_doc: врачей нет, подтверждаем вызов')
             
             # Удаляем старое сообщение с кнопками
-            await event.message.delete()
-            
+            # await event.message.delete()
+            await db.delete_message(event.message.body.mid)
             # Отправляем новое сообщение без кнопок с номером вызова
             call_number = call_data.call_number if call_data else call_id
             await event.message.answer(f"✅ Вызов #{call_number} принят (врач не назначен, так как список врачей пуст)")
@@ -1168,8 +1169,8 @@ async def accept_call_handler(event: MessageCallback, db: DataBase):
             doc_id=doc_id
         )
         # Удаляем сообщение у регистратора
-        await event.message.delete()
-        
+        # await event.message.delete()
+        await db.delete_message(event.message.body.mid)
         # Отправляем подтверждение регистратору
         await event.message.answer(f"✅ Вызов #{call_data.call_number} принят.")
         
@@ -1290,8 +1291,8 @@ async def reject_call_handler(event: MessageCallback, db: DataBase):
             return
         
         # Удаляем сообщение регистратора с кнопками
-        await event.message.delete()
-        
+        # await event.message.delete()
+        await db.delete_message(event.message.body.mid)
         # Удаляем предыдущие сообщения пациента
         user_state = await db.get_state(call_data.user_id)
         if user_state and user_state.last_message_ids:
@@ -1352,8 +1353,8 @@ async def process_reject_reason(event: MessageCreated, context: MemoryContext, d
         )
         
         # Удаляем сообщение пользователя с причиной
-        await event.message.delete()
-        
+        # await event.message.delete()
+        await db.delete_message(event.message.body.mid)
         # Отправляем подтверждение регистратору
         await event.message.answer(f"❌ Вызов #{call_data.call_number} отклонён. Причина сохранена.")
         
