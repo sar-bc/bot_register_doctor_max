@@ -15,7 +15,7 @@ logger = Logger(__name__)
 # Загружаем переменные из .env
 load_dotenv()
 
-TOKEN = os.getenv('MAX_BOT_TOKEN')
+TOKEN = os.getenv("MAX_BOT_TOKEN")
 
 bot = Bot(token=TOKEN, parse_mode=ParseMode.HTML)
 dp = Dispatcher()
@@ -25,69 +25,68 @@ scheduler = None
 
 class DependencyMiddleware:
     """Middleware для внедрения зависимостей в хендлеры"""
+
     async def __call__(self, handler, event, data):
-        data['db'] = db
-        data['scheduler'] = scheduler
+        data["db"] = db
+        data["scheduler"] = scheduler
         return await handler(event, data)
 
 
 async def startup():
     """Инициализация при запуске"""
     global scheduler
-    
+
     await db.create_db()
-    
+
     await db.init_settings()
-    
+
     # Запускаем планировщик
     scheduler = BotScheduler(bot, db)
     await scheduler.start()
-    #----------------------------------
-    # settings = await db.get_settings()
-    # await scheduler._notify_status_change(
-    #             settings.bot_active, 
-    #             "System startup"
-    #         )
-    #----------------------------------
-    await logger.info('✅ Бот запущен')
+    # ----------------------------------
+    settings = await db.get_settings()
+    await scheduler._notify_status_change(settings.bot_active, "System startup")
+    # ----------------------------------
+    await logger.info("✅ Бот запущен")
+
 
 async def shutdown():
     """Очистка при остановке"""
     global scheduler
-    
-    await logger.info('🛑 Бот останавливается...')
-    
+
+    await logger.info("🛑 Бот останавливается...")
+
     # Останавливаем планировщик
     if scheduler:
         await scheduler.stop()
-    
+
     # Закрываем БД
     if db:
         await db.close()
-    
+
     # Закрываем сессию бота
     if bot.session:
         await bot.session.close()
-    
-    await logger.info('✅ Бот остановлен')
+
+    await logger.info("✅ Бот остановлен")
 
 
 async def main():
     """Главная функция"""
     # Регистрируем роутеры
     dp.include_routers(admin_router, user_router)
-    
+
     # Добавляем middleware для зависимостей
     dp.middleware(DependencyMiddleware())
-    
+
     # Запускаем инициализацию
     await startup()
-    
+
     # Запускаем polling
     await dp.start_polling(bot)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
@@ -100,4 +99,5 @@ if __name__ == '__main__':
         except:
             pass
         import threading
+
         threading.Timer(0.5, lambda: os._exit(0)).start()
