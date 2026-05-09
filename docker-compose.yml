@@ -45,6 +45,7 @@ services:
     restart: unless-stopped  
     volumes:
       - ./bot:/bot
+      - ./temp:/bot/temp
     environment:
       - TZ=Europe/Samara
 

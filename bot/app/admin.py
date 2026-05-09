@@ -1587,6 +1587,79 @@ async def handle_stats_select_date(event: MessageCallback, context: MemoryContex
 
 ##############################################################################
 
+# @router.message_callback(F.callback.payload.startswith("export_period_"))
+# async def handle_export_period(event: MessageCallback, db: DataBase):
+#     """Экспорт Excel за выбранный период"""
+#     user_id = event.chat.chat_id
+#     user_state = await db.get_state(user_id)
+    
+#     if user_state and user_state.last_message_ids:
+#         await db.delete_messages(user_state)
+#         user_state.last_message_ids = []
+#         await db.update_state(user_state)
+    
+#     try:
+#         # Данные: export_period_01.03.2026_30.03.2026
+#         parts = event.callback.payload.split("_")
+#         start_date_with_dots = parts[2]  # 01.03.2026
+#         end_date_with_dots = parts[3]    # 30.03.2026
+#         print(f"print:{parts}")
+
+
+#         # Конвертируем для БД: 01.03.2026 -> 01-03-2026
+#         start_date_for_db = start_date_with_dots.replace('.', '-')
+#         end_date_for_db = end_date_with_dots.replace('.', '-')
+
+#         await logger.info(f'Экспорт за период: {start_date_for_db} - {end_date_for_db}')
+
+#         # Получаем анкеты за период (метод ожидает формат ДД-ММ-ГГГГ)
+#         questionnaires = await db.get_questionnaires_by_period(start_date_for_db, end_date_for_db)
+        
+#         if not questionnaires:
+#             sent_msg = await event.message.answer(
+#                 f"📭 Нет данных за период {start_date_with_dots} - {end_date_with_dots}",
+#                 attachments=[kb.admin_kb()]
+#             )
+#             user_state.last_message_ids.append(sent_msg.message.body.mid)
+#             await db.update_state(user_state)
+#             return
+        
+#         excel_file_data = await generate_doctor_calls_excel(questionnaires, db)
+        
+#         # Сохраняем в папку temp
+#         import os
+#         temp_filename = f"temp/export_{start_date_with_dots}_{end_date_with_dots}_{user_id}.xlsx"
+        
+#         with open(temp_filename, 'wb') as f:
+#             f.write(excel_file_data)
+        
+#         # Отправляем файл
+#         file_attachment = InputMedia(path=temp_filename)
+        
+#         sent_msg = await event.bot.send_message(
+#             chat_id=user_id,
+#             text=f"📊 Вызовы врачей за период:\n{start_date_with_dots} - {end_date_with_dots}\n\nНайдено вызовов: {len(questionnaires)}",
+#             attachments=[file_attachment, kb.admin_kb()]
+#         )
+        
+#         # Удаляем временный файл
+#         try:
+#             os.remove(temp_filename)
+#         except:
+#             pass
+        
+#         user_state.last_message_ids.append(sent_msg.message.body.mid)
+#         await db.update_state(user_state)
+#         await logger.info(f"Файл отправлен пользователю {user_id}")
+
+#     except Exception as e:
+#         await logger.error(f"Критическая ошибка экспорта: {e}")
+#         sent_msg = await event.message.answer(
+#             f"⚠️ Ошибка при экспорте: {str(e)[:200]}",
+#             attachments=[kb.admin_kb()]
+#         )
+#         user_state.last_message_ids.append(sent_msg.message.body.mid)
+#         await db.update_state(user_state)
 @router.message_callback(F.callback.payload.startswith("export_period_"))
 async def handle_export_period(event: MessageCallback, db: DataBase):
     """Экспорт Excel за выбранный период"""
@@ -1604,7 +1677,6 @@ async def handle_export_period(event: MessageCallback, db: DataBase):
         start_date_with_dots = parts[2]  # 01.03.2026
         end_date_with_dots = parts[3]    # 30.03.2026
         print(f"print:{parts}")
-
 
         # Конвертируем для БД: 01.03.2026 -> 01-03-2026
         start_date_for_db = start_date_with_dots.replace('.', '-')
@@ -1626,9 +1698,12 @@ async def handle_export_period(event: MessageCallback, db: DataBase):
         
         excel_file_data = await generate_doctor_calls_excel(questionnaires, db)
         
-        # Сохраняем в папку temp
+        # Сохраняем в папку temp (с автоматическим созданием директории)
         import os
-        temp_filename = f"temp/export_{start_date_with_dots}_{end_date_with_dots}_{user_id}.xlsx"
+        temp_dir = "temp"
+        os.makedirs(temp_dir, exist_ok=True)  # Создаем папку, если её нет
+        
+        temp_filename = os.path.join(temp_dir, f"export_{start_date_with_dots}_{end_date_with_dots}_{user_id}.xlsx")
         
         with open(temp_filename, 'wb') as f:
             f.write(excel_file_data)
@@ -1642,11 +1717,13 @@ async def handle_export_period(event: MessageCallback, db: DataBase):
             attachments=[file_attachment, kb.admin_kb()]
         )
         
-        # Удаляем временный файл
+        # Удаляем временный файл с проверкой существования
         try:
-            os.remove(temp_filename)
-        except:
-            pass
+            if os.path.exists(temp_filename):
+                os.remove(temp_filename)
+                await logger.debug(f"Временный файл удалён: {temp_filename}")
+        except Exception as del_error:
+            await logger.warning(f"Не удалось удалить временный файл {temp_filename}: {del_error}")
         
         user_state.last_message_ids.append(sent_msg.message.body.mid)
         await db.update_state(user_state)
@@ -1660,7 +1737,6 @@ async def handle_export_period(event: MessageCallback, db: DataBase):
         )
         user_state.last_message_ids.append(sent_msg.message.body.mid)
         await db.update_state(user_state)
-
 ##############################################################################
 
 # @router.message_callback(F.callback.payload.startswith("export_"))
