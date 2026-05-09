@@ -1676,7 +1676,7 @@ async def handle_export_period(event: MessageCallback, db: DataBase):
         parts = event.callback.payload.split("_")
         start_date_with_dots = parts[2]  # 01.03.2026
         end_date_with_dots = parts[3]    # 30.03.2026
-        print(f"print:{parts}")
+        # print(f"print:{parts}")
 
         # Конвертируем для БД: 01.03.2026 -> 01-03-2026
         start_date_for_db = start_date_with_dots.replace('.', '-')
@@ -1721,7 +1721,7 @@ async def handle_export_period(event: MessageCallback, db: DataBase):
         try:
             if os.path.exists(temp_filename):
                 os.remove(temp_filename)
-                await logger.debug(f"Временный файл удалён: {temp_filename}")
+                await logger.info(f"Временный файл удалён: {temp_filename}")
         except Exception as del_error:
             await logger.warning(f"Не удалось удалить временный файл {temp_filename}: {del_error}")
         
