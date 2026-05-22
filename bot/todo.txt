@@ -1,0 +1,27 @@
+https://max.ru/id6449070269_1_bot
+
+
+
+
+https://github.com/love-apples/maxapi
+документация
+
+https://love-apples.github.io/maxapi/
+
+
+docker exec -it mysql_db_doctor_max mysql -u root -p -e "USE bot_doctor_max; INSERT INTO AdminBot (id_max, username, role) VALUES (274672360, 'Viktor', 0);"
+
+Логи бота:
+bash
+# Посмотреть последние логи бота
+docker logs bot_doctor_max_container
+
+# Следить за логами в реальном времени (как tail -f)
+docker logs -f bot_doctor_max_container
+
+# Посмотреть последние 100 строк
+docker logs --tail 100 bot_doctor_max_container
+Логи MySQL:
+bash
+docker logs mysql_db_doctor_max
+docker logs -f mysql_db_doctor_max

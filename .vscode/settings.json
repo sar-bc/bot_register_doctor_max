@@ -1,0 +1,23 @@
+{
+    "explorer.compactFolders": false,
+    "explorer.fileNesting.expand": false,
+    "explorer.sortOrder": "default",
+
+    "editor.fontSize": 14,
+    "editor.lineHeight": 1.5,
+    "editor.formatOnSave": true,
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "files.autoSave": "afterDelay",
+    "files.autoSaveDelay": 1000,
+    "explorer.confirmDelete": false,
+    "workbench.colorTheme": "Dark+",
+    "git.enableSmartCommit": true,
+    "terminal.integrated.fontSize": 12,
+    "editor.minimap.enabled": true,
+    "editor.wordWrap": "on",
+    "editor.codeLens": true,
+    "window.zoomLevel": 0,
+    "explorer.fileNesting.enabled": true,
+    "explorer.decorations.badge": true
+}
