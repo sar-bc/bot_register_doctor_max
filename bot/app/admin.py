@@ -1305,14 +1305,13 @@ async def reject_call_handler(event: MessageCallback, db: DataBase):
         await event.bot.send_message(
             chat_id=call_data.user_id,
             text=f"🏥 Статус вызова #{call_data.call_number}\n\n"
-                 f"❌ Ваш вызов отклонён.\n"
-                 f"📝 Причина: Отклонен call-центром\n\n"
-                 f"ℹ️ Для дополнительных вопросов обратитесь в регистратуру.",
+                 f"ℹ️ Для оформления данного вызова просьба обратиться в Call-центр по номеру телефона\n"
+                 f"📞 +7(8453)54-43-15",
             attachments=[main_menu]
         )
         
         # Отправляем подтверждение регистратору
-        await event.message.answer(f"❌ Вызов #{call_data.call_number} отклонён")
+        await event.message.answer(f"❌ Вызов #{call_data.call_number} отклонён\n\n=> /start")
         
         await logger.info(f'reject_call_handler: вызов #{call_data.call_number} отклонён')
         

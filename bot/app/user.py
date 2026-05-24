@@ -1250,7 +1250,8 @@ async def reject_cancel_request(event: MessageCallback, db: DataBase):
         await event.bot.send_message(
             chat_id=call.user_id,
             text=f"ℹ️ Ваш запрос на отмену вызова #{call.call_number} был отклонен.\n\n"
-                 "Вызов остается активным. Если у вас остались вопросы, пожалуйста, свяжитесь с нами.",
+                 "Вызов остается активным. Если у вас остались вопросы, пожалуйста, свяжитесь с нами.\n"
+                 "📞 +7(8453)54-43-15",
             attachments=[kb.home_keyboard()]
         )
         
