@@ -251,3 +251,20 @@ class Settings(Base):
                 f"group_id={self.group_id}, "
                 f"thread_id={self.thread_id})>")
 #########################################
+class CallNotification(Base):
+    """Модель для хранения отправленных уведомлений о вызовах"""
+    __tablename__ = 'call_notifications'
+    
+    id = Column(Integer, primary_key=True)
+    call_id = Column(Integer, ForeignKey('doctor_calls.id', ondelete='CASCADE'), nullable=False, index=True)
+    registrator_id = Column(Integer, ForeignKey('AdminBot.id', ondelete='CASCADE'), nullable=False, index=True)
+    message_id = Column(String(100), nullable=False)  # ID сообщения в MAX
+    sent_at = Column(DateTime, default=datetime.now)
+    
+    # Связи
+    call = relationship('DoctorCall', backref='notifications')
+    registrator = relationship('AdminBot', backref='sent_notifications')
+    
+    def __repr__(self):
+        return f"<CallNotification(call_id={self.call_id}, registrator_id={self.registrator_id}, message_id={self.message_id})>"
+#########################################

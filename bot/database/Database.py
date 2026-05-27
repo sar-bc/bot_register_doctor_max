@@ -4,6 +4,7 @@ from sqlalchemy import select, update, delete, func, BigInteger, text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError, NoResultFound
 from database.models import Base, User, UserState, AdminBot, Logs, QuestionnaireStatus, DoctorCall, Settings, Doctor, Patient
+from database.models import CallNotification
 from datetime import datetime, date
 import logging
 from typing import Optional, Union, List
@@ -308,6 +309,30 @@ class DataBase:
             
             state.last_message_ids = []
             await self.update_state(state)
+
+    async def delete_single_message(self, message_id: str):
+        """Удаляет одно сообщение по его ID"""
+        try:
+            from dotenv import load_dotenv
+            import os
+            
+            load_dotenv()
+            TOKEN = os.getenv('MAX_BOT_TOKEN')
+            
+            headers = {"Authorization": TOKEN}
+            url = f"https://platform-api.max.ru/messages?message_id={message_id}"
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.delete(url, headers=headers) as response:
+                    if response.status == 200:
+                        logger.info(f"Сообщение {message_id} удалено")
+                        return True
+                    else:
+                        logger.error(f"Ошибка удаления {message_id}: {response.status}")
+                        return False
+        except Exception as e:
+            logger.error(f"Ошибка при удалении сообщения {message_id}: {e}")
+            return False
 
     # async def delete_inline_messages(self, bot: Bot, user_id: int):
     #     user_state = await self.get_state(user_id)
@@ -1344,6 +1369,102 @@ class DataBase:
         except SQLAlchemyError as e:
             logger.error(f"Ошибка БД при получении пациента {patient_id}: {str(e)}")
             raise  # Пробрасываем исключение для обработки на уровне выше
+
+    
+    async def create_call_notification(self, call_id: int, registrator_id: int, message_id: str) -> bool:
+        """
+        Сохраняет информацию об отправленном уведомлении о вызове
+        
+        Args:
+            call_id: ID вызова
+            registrator_id: ID регистратора (кому отправили)
+            message_id: ID сообщения в MAX
+        
+        Returns:
+            bool: True если сохранили, False если ошибка
+        """
+        try:
+            async with self.Session() as session:
+                notification = CallNotification(
+                    call_id=call_id,
+                    registrator_id=registrator_id,
+                    message_id=message_id
+                )
+                session.add(notification)
+                await session.commit()
+                return True
+        except Exception as e:
+            logger.error(f"Ошибка при сохранении уведомления: {e}")
+            await session.rollback()
+            return False
+
+
+    async def get_call_notifications(self, call_id: int) -> List[CallNotification]:
+        """
+        Получает все уведомления для конкретного вызова
+        
+        Args:
+            call_id: ID вызова
+        
+        Returns:
+            List[CallNotification]: список уведомлений
+        """
+        try:
+            async with self.Session() as session:
+                result = await session.execute(
+                    select(CallNotification).where(CallNotification.call_id == call_id)
+                )
+                return result.scalars().all()
+        except Exception as e:
+            logger.error(f"Ошибка при получении уведомлений для вызова {call_id}: {e}")
+            return []
+
+
+    async def delete_call_notifications(self, call_id: int) -> bool:
+        """
+        Удаляет все уведомления для конкретного вызова
+        
+        Args:
+            call_id: ID вызова
+        
+        Returns:
+            bool: True если удалили, False если ошибка
+        """
+        try:
+            async with self.Session() as session:
+                await session.execute(
+                    delete(CallNotification).where(CallNotification.call_id == call_id)
+                )
+                await session.commit()
+                return True
+        except Exception as e:
+            logger.error(f"Ошибка при удалении уведомлений для вызова {call_id}: {e}")
+            await session.rollback()
+            return False
+
+
+    async def delete_all_old_notifications(self, days: int = 7) -> int:
+        """
+        Удаляет старые уведомления (для очистки БД)
+        
+        Args:
+            days: старше скольки дней удалять
+        
+        Returns:
+            int: количество удаленных записей
+        """
+        try:
+            cutoff_date = datetime.now() - timedelta(days=days)
+            async with self.Session() as session:
+                result = await session.execute(
+                    delete(CallNotification).where(CallNotification.sent_at < cutoff_date)
+                )
+                await session.commit()
+                return result.rowcount
+        except Exception as e:
+            logger.error(f"Ошибка при удалении старых уведомлений: {e}")
+            await session.rollback()
+            return 0
 
 
 

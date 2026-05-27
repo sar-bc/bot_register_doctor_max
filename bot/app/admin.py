@@ -1130,9 +1130,19 @@ async def accept_choice_doc(event: MessageCallback, db: DataBase, context: Memor
         else:
             # Если врачей нет, просто подтверждаем вызов
             await logger.info(f'accept_choice_doc: врачей нет, подтверждаем вызов')
-            
+            # ===== НАЧАЛО ВСТАВКИ (удаляем уведомления) =====
+            notifications = await db.get_call_notifications(call_id)
+            for notif in notifications:
+                try:
+                    await db.delete_single_message(notif.message_id)
+                    await logger.info(f'Удалено уведомление у регистратора {notif.registrator_id}')
+                except Exception as e:
+                    await logger.warning(f"Не удалось удалить сообщение {notif.message_id}: {e}")
+            await db.delete_call_notifications(call_id)
+            await logger.info(f'Удалены записи уведомлений для вызова {call_id}')
+            # ===== КОНЕЦ ВСТАВКИ =====
+
             # Удаляем старое сообщение с кнопками
-            # await event.message.delete()
             await db.delete_message(event.message.body.mid)
             # Отправляем новое сообщение без кнопок с номером вызова
             call_number = call_data.call_number if call_data else call_id
@@ -1168,8 +1178,20 @@ async def accept_call_handler(event: MessageCallback, db: DataBase):
             rejection_reason=None,
             doc_id=doc_id
         )
+
+        # ===== НАЧАЛО ВСТАВКИ (удаляем уведомления) =====
+        notifications = await db.get_call_notifications(call_id)
+        for notif in notifications:
+            try:
+                await db.delete_single_message(notif.message_id)
+                await logger.info(f'Удалено уведомление у регистратора {notif.registrator_id} для вызова {call_id}')
+            except Exception as e:
+                await logger.warning(f"Не удалось удалить сообщение {notif.message_id}: {e}")
+        await db.delete_call_notifications(call_id)
+        await logger.info(f'Удалены записи уведомлений для вызова {call_id}')
+        # ===== КОНЕЦ ВСТАВКИ =====
+
         # Удаляем сообщение у регистратора
-        # await event.message.delete()
         await db.delete_message(event.message.body.mid)
         # Отправляем подтверждение регистратору
         await event.message.answer(f"✅ Вызов #{call_data.call_number} принят.")
@@ -1285,13 +1307,24 @@ async def reject_call_handler(event: MessageCallback, db: DataBase):
             rejection_reason="Отклонен call-центром",
             doc_id=None
         )
-        
+
+        # ===== НАЧАЛО ВСТАВКИ (удаляем уведомления) =====
+        notifications = await db.get_call_notifications(call_id)
+        for notif in notifications:
+            try:
+                await db.delete_single_message(notif.message_id)
+                await logger.info(f'Удалено уведомление у регистратора {notif.registrator_id} для вызова {call_id}')
+            except Exception as e:
+                await logger.warning(f"Не удалось удалить сообщение {notif.message_id}: {e}")
+        await db.delete_call_notifications(call_id)
+        await logger.info(f'Удалены записи уведомлений для вызова {call_id}')
+        # ===== КОНЕЦ ВСТАВКИ =====
+
         if not success:
             await event.message.answer("❌ Ошибка при обновлении статуса")
             return
         
         # Удаляем сообщение регистратора с кнопками
-        # await event.message.delete()
         await db.delete_message(event.message.body.mid)
         # Удаляем предыдущие сообщения пациента
         user_state = await db.get_state(call_data.user_id)

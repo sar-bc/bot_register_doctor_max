@@ -864,11 +864,14 @@ async def confirm_and_save(event, context, db):
     
     for staff in staff_list:
         try:
-            await event.bot.send_message(
+            sent_mess = await event.bot.send_message(
                 chat_id=staff.id_max,
                 text=staff_message,
                 attachments=[kb.accept_cancel_keybord(call.id)]
             )
+            await db.create_call_notification(call.id, staff.id, sent_mess.message.body.mid)
+
+            # await logger.info(f'call.id={call.id}, staff.id={staff.id}, sent_mess.message.body.mid={sent_mess.message.body.mid}')
             await logger.info(f'confirm_and_save: уведомление отправлено регистратору {staff.id_max}')
         except Exception as e:
             await logger.error(f'confirm_and_save: ошибка отправки регистратору {staff.id_max}: {e}')
