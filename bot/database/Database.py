@@ -22,6 +22,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 class DataBase:
+    API_BASE_URL = "https://platform-api2.max.ru"
     def __init__(self):
         # # For SQLITE
         # self.connect = 'sqlite+aiosqlite:///db.sqlite3'
@@ -274,7 +275,7 @@ class DataBase:
         TOKEN = os.getenv('MAX_BOT_TOKEN')
         headers = {"Authorization": TOKEN}
         try:
-            url = f"https://platform-api.max.ru/messages?message_id={mess_id}"
+            url = f"{self.API_BASE_URL}/messages?message_id={mess_id}"
             async with aiohttp.ClientSession() as session:
                 async with session.delete(url, headers=headers) as response:
                     if response.status == 200:
@@ -297,7 +298,7 @@ class DataBase:
             
             for lst in state.last_message_ids:
                 try:
-                    url = f"https://platform-api.max.ru/messages?message_id={lst}"
+                    url = f"{self.API_BASE_URL}/messages?message_id={lst}"
                     async with aiohttp.ClientSession() as session:
                         async with session.delete(url, headers=headers) as response:
                             if response.status == 200:
@@ -320,7 +321,7 @@ class DataBase:
             TOKEN = os.getenv('MAX_BOT_TOKEN')
             
             headers = {"Authorization": TOKEN}
-            url = f"https://platform-api.max.ru/messages?message_id={message_id}"
+            url = f"{self.API_BASE_URL}/messages?message_id={message_id}"
             
             async with aiohttp.ClientSession() as session:
                 async with session.delete(url, headers=headers) as response:
