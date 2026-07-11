@@ -2,9 +2,14 @@
 FROM python:3.10-slim
 
 # Установите необходимые пакеты для локалей
-RUN apt-get update && apt-get install -y locales && \
-    echo "ru_RU.UTF-8 UTF-8" >> /etc/locale.gen && \
-    locale-gen
+# Установка сертификатов и зависимостей
+RUN apt-get update && apt-get install -y \
+    locales \
+    ca-certificates \
+    && update-ca-certificates \
+    && echo "ru_RU.UTF-8 UTF-8" >> /etc/locale.gen \
+    && locale-gen \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Установите локаль по умолчанию
 ENV LANG=ru_RU.UTF-8
