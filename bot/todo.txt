@@ -32,5 +32,5 @@ docker logs -f mysql_db_doctor_max
 docker exec mysql_db_doctor_max mysqldump -u doctor -p159753 bot_doctor_max > ~/BACKUP/backup_db_$(date +%d.%m.%y).sql
 -------------------------------------
 # Восстановить
-docker exec -i mysql_db_doctor_max mysql -u doctor -p159753 bot_doctor_max < /root/backup_db_21.03.26.sql
+docker exec -i mysql_db_doctor_max mysql -u doctor -p159753 bot_doctor_max < backup_db_15.07.26.sql
 ---------------------------------------------
